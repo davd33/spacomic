@@ -6,6 +6,18 @@
 
 (defvar *debug-mode* nil)
 
+;; UTILITIES
+(defun make-keyword (name)
+  (read-from-string (reverse (concatenate 'string
+                                          (reverse name) ":"))))
+
+(defun str->kw (string)
+  (loop for c across string
+        collect (make-keyword (string c))))
+
+(defun char->kw (char)
+  (make-keyword (string char)))
+
 ;; LETTERS
 (defmethod make-letter ((segments list))
   "Takes a list of segments and return a function that,
@@ -82,11 +94,6 @@
   (loop for segment in letter
         do (draw-segment segment)))
 
-;; UTILITIES
-(defun make-keyword (name)
-  (read-from-string (reverse (concatenate 'string
-                                          (reverse name) ":"))))
-
 ;; RECTANGLE
 
 (defun make-rect (y x w h)
@@ -104,19 +111,16 @@
   (caddr r))
 
 ;; DISPLAY TITLE
-(defun str->letters (string)
-  (loop for c across string
-        collect (make-keyword (string c))))
 
 (defun draw-title (string rect)
-  (loop for letter in (str->letters string)
-        for i from 1 to (length string)
-        do (funcall (getf letters letter)
-                    (let ((rect-length (/ (xrect rect) (length string))))
+  (let ((rect-length (/ (wrect rect) (length string))))
+    (loop for letter in (str->kw string)
+          for i below (length string)
+          do (funcall (getf letters letter)
                       (make-rect (yrect rect)
                                  (* rect-length i)
                                  rect-length
-                                 (wrect rect))))))
+                                 (hrect rect))))))
 
 ;; MAIN
 (defun run ()
@@ -124,11 +128,10 @@
                          :input-echoing nil
                          :enable-function-keys t)
     (croatoan:with-window (win)
-      (croatoan:box win)
       (let ((*game-win* win))
         (loop while t
               do (let ((c (croatoan:get-char win)))
-                   (draw-title "ab" '((0 0) 30 20))))))))
+                   (draw-title "ab" (make-rect 0 0 10 5))))))))
 
 ;; ENTRY
 (defun -main ()
