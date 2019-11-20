@@ -201,10 +201,9 @@
                        ((4/5 9/10) (3/5 9/10))
                        ((3/5 9/10) (2/5 7/10))
                        ((2/5 7/10) (2/5 3/10))))
-    ;; :7 ,(make-letter '((())))
-    ;; :8 ,(make-letter '((())))
-    ;; :9 ,(make-letter '((())))
-    ))
+    :7 ,(make-letter '((())))
+    :8 ,(make-letter '((())))
+    :9 ,(make-letter '((())))))
 
 ;; DRAW THINGS
 (defun draw-segment (seg)
@@ -252,20 +251,20 @@
     (croatoan:with-window (win)
       (let ((*game-win* win))
         (loop while t
-              do (let* ((c (croatoan:get-char win))
-                        (str "helloworld32")
+              do (let* ((c (croatoan:get-wide-char win :y 10 :x 0))
+                        (str "spacomic")
                         (str2 (string (code-char c)))
-                        (width (* 17 (length str)))
-                        (height 10))
+                        (width (* .9 (croatoan:width win)))
+                        (height 6))
                    (draw-title str
-                               (make-rect 0 10
+                               (make-rect (- (/ (croatoan:height win) 2) 7)
+                                          0
                                           width
-                                          height))
-                   ))))))
+                                          height))))))))
 
 ;; ENTRY
 (defun -main ()
-  (when (not *debug-mode*) (sb-ext:disable-debugger))
+  ;; (when (not *debug-mode*) (sb-ext:disable-debugger))
   (setf *random-state* (make-random-state t))
   (setf swank::*loopback-interface* "0.0.0.0")
   (swank:create-server :port 4005 :dont-close t)
