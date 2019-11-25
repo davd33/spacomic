@@ -2,4 +2,4 @@
 
 (defpackage #:spacomic
   (:use #:cl)
-  (:export #:-main))
+  (:export #:main))

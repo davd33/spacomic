@@ -2,7 +2,7 @@
 
 (in-package #:spacomic)
 
-(defvar *game-win* nil)
+(defvar *win* nil)
 
 (defvar *debug-mode* t)
 
@@ -208,8 +208,9 @@
 ;; DRAW THINGS
 (defun draw-segment (seg)
   (destructuring-bind ((ya xa) (yb xb)) seg
-    (croatoan:draw-shape *game-win*
-                         (croatoan:line ya xa yb xb))))
+    (let ((shape (croatoan:line ya xa yb xb)))
+      (setf (croatoan:color-pair *win*) '(:white :white))
+      (croatoan:draw-shape *win* (croatoan:fill-shape shape)))))
 
 (defun draw-letter (letter)
   (loop for segment in letter
@@ -244,31 +245,32 @@
                                  (hrect rect))))))
 
 ;; MAIN
-(defun run ()
-  (croatoan:with-screen (screen
-                         :input-echoing nil
-                         :enable-function-keys t)
-    (croatoan:with-window (win)
-      (let ((*game-win* win))
-        (loop while t
-              do (let* ((c (croatoan:get-wide-char win :y 10 :x 0))
-                        (str "spacomic")
-                        (str2 (string (code-char c)))
-                        (width (* .9 (croatoan:width win)))
-                        (height 6))
-                   (draw-title str
-                               (make-rect (- (/ (croatoan:height win) 2) 7)
-                                          0
-                                          width
-                                          height))))))))
+(defvar *scr* nil)
+(defun bind-handlers (scr)
+  (croatoan:bind scr #\q
+                 (lambda (w e) (throw 'event-loop :quit)))
 
-;; ENTRY
-(defun -main ()
-  ;; (when (not *debug-mode*) (sb-ext:disable-debugger))
-  (setf *random-state* (make-random-state t))
-  (setf swank::*loopback-interface* "0.0.0.0")
-  (swank:create-server :port 4005 :dont-close t)
-  (run)
+  (croatoan:bind scr #\c
+                (lambda (w e)
+                  (croatoan:clear w)))
+
+  (croatoan:bind scr t
+                 (lambda (w e)
+                   (let ((*win* w)
+                         (ww (croatoan:width w))
+                         (hh (croatoan:height w)))
+                     (croatoan:clear w)
+                     (draw-title "Spacomic"
+                                 (make-rect
+                                  (round (* .3 hh))
+                                  (round (* .1 ww))
+                                  (round (* 1 ww))
+                                  (round (* .1 hh))))))))
+
+(defun MAIN ()
+  (let ((*debugger-hook* nil))
+   (croatoan:with-screen (scr :input-blocking 100)
+     (bind-handlers scr)
+     (croatoan:run-event-loop (setf *scr* scr))))
   (sb-ext:exit))
-
 
